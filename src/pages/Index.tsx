@@ -184,11 +184,10 @@ const Index = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
-      <div className="container h-full mx-auto px-4 py-4 max-w-md">
+      <div className="container h-full mx-auto px-4 py-4 max-w-sm">
 
         <div className="relative h-full">
           {/* Camera Preview */}
-          {/* Camera Preview dengan margin bottom untuk memberi ruang selector */}
           <div className="relative">
             <CameraPreview
               videoRef={videoRef}
@@ -202,8 +201,6 @@ const Index = () => {
           </div>
 
           {/* Twibon Selector yang menindih dari bawah */}
-
-
           <div className="absolute bottom-0 left-0 right-0 z-10">
             <TwibonSelector
               selectedTwibon={selectedTwibonId}

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useTwibbons } from '@/hooks/useTwibbons';
-import { RotateCcw, Images } from 'lucide-react';
+import { RefreshCcw, Images } from 'lucide-react';
 import { useEffect, useRef, useState} from 'react';
 import { Link } from 'react-router-dom';
 
@@ -172,7 +172,7 @@ const TwibonSelector = ({
             className="bg-white/20 text-white border-0 hover:bg-white/30 rounded-full w-8 h-8 p-0 flex items-center justify-center"
             disabled={!isCameraReady}
           >
-            <RotateCcw className="w-4 h-4" />
+            <RefreshCcw className="w-4 h-4" />
           </Button>
         </div>
       </div>
