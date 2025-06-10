@@ -49,9 +49,19 @@ const TwibonSelector = ({
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-xl py-4 overflow-visible relative">
+      <style>{`
+        .scroll-hidden::-webkit-scrollbar {
+          display: none;
+        }
+        .scroll-hidden {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+        }
+      `}</style>
+
       <div
         ref={containerRef}
-        className="relative flex overflow-x-auto gap-2 snap-x snap-mandatory scroll-smooth px-2"
+        className="scroll-hidden relative flex overflow-x-auto gap-2 snap-x snap-mandatory scroll-smooth px-2"
         style={{ overflowY: 'visible' }}
       >
         {/* Spacer kiri */}
@@ -133,4 +143,3 @@ const TwibonSelector = ({
 };
 
 export default TwibonSelector;
-
