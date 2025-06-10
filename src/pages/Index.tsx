@@ -1,8 +1,5 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, RotateCcw, Images, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import TwibonSelector from '@/components/TwibonSelector';
 import CameraPreview from '@/components/CameraPreview';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +23,7 @@ const Index = () => {
   const startCamera = useCallback(async () => {
     try {
       console.log('Starting camera with facing mode:', facingMode);
-      
+
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
@@ -34,7 +31,7 @@ const Index = () => {
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
@@ -44,10 +41,10 @@ const Index = () => {
 
       console.log('Camera stream obtained successfully');
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        
+
         videoRef.current.onloadedmetadata = () => {
           console.log('Video metadata loaded');
           setIsCameraReady(true);
@@ -65,7 +62,7 @@ const Index = () => {
 
   useEffect(() => {
     startCamera();
-    
+
     return () => {
       console.log('Cleaning up camera stream');
       if (stream) {
@@ -78,19 +75,19 @@ const Index = () => {
     if (!videoRef.current || !canvasRef.current || !isCameraReady) return;
 
     setIsCapturing(true);
-    
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) return;
 
     // Set canvas to 16:9 portrait aspect ratio
     const videoAspect = video.videoWidth / video.videoHeight;
     const targetAspect = 9 / 16;
-    
+
     let sourceWidth, sourceHeight, sourceX, sourceY;
-    
+
     if (videoAspect > targetAspect) {
       // Video is wider than target, crop horizontally
       sourceHeight = video.videoHeight;
@@ -131,13 +128,13 @@ const Index = () => {
       twibonImg.crossOrigin = 'anonymous';
       twibonImg.onload = () => {
         ctx.drawImage(twibonImg, 0, 0, canvas.width, canvas.height);
-        
+
         // Convert to blob and save
         canvas.toBlob(async (blob) => {
           if (blob) {
             try {
               await savePhoto(blob, selectedTwibonId || undefined);
-              
+
               toast({
                 title: "Photo Captured!",
                 description: "Your photo has been saved.",
@@ -149,7 +146,7 @@ const Index = () => {
                 variant: "destructive",
               });
             }
-            
+
             setTimeout(() => setIsCapturing(false), 200);
           }
         }, 'image/jpeg', 0.9);
@@ -161,7 +158,7 @@ const Index = () => {
         if (blob) {
           try {
             await savePhoto(blob);
-            
+
             toast({
               title: "Photo Captured!",
               description: "Your photo has been saved.",
@@ -173,7 +170,7 @@ const Index = () => {
               variant: "destructive",
             });
           }
-          
+
           setTimeout(() => setIsCapturing(false), 200);
         }
       }, 'image/jpeg', 0.9);
@@ -186,70 +183,40 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
-      <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* Header */}
-        {/* <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">Twibbon Camera</h1>
-          <div className="flex gap-2">
-            <Link to="/twibon-manager">
-              <Button variant="secondary" size="sm" className="bg-white/20 text-white border-0 hover:bg-white/30">
-                <Settings className="w-4 h-4 mr-2" />
-                Manage
-              </Button>
-            </Link>
-            <Link to="/gallery">
-              <Button variant="secondary" size="sm" className="bg-white/20 text-white border-0 hover:bg-white/30">
-                <Images className="w-4 h-4 mr-2" />
-                Gallery
-              </Button>
-            </Link>
+    <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
+      <div className="container h-full mx-auto px-4 py-4 max-w-md">
+
+        <div className="relative h-full">
+          {/* Camera Preview */}
+          {/* Camera Preview dengan margin bottom untuk memberi ruang selector */}
+          <div className="relative">
+            <CameraPreview
+              videoRef={videoRef}
+              selectedTwibonId={selectedTwibonId}
+              selectedTwibonUrl={selectedTwibon?.url || ''}
+              isCapturing={isCapturing}
+              isCameraReady={isCameraReady}
+              facingMode={facingMode}
+            />
+            <canvas ref={canvasRef} className="hidden" />
           </div>
-        </div> */}
 
-        {/* Camera Preview */}
-        <div className="relative mb-6">
-          <CameraPreview
-            videoRef={videoRef}
-            selectedTwibonId={selectedTwibonId}
-            selectedTwibonUrl={selectedTwibon?.url || ''}
-            isCapturing={isCapturing}
-            isCameraReady={isCameraReady}
-            facingMode={facingMode}
-          />
-          <canvas ref={canvasRef} className="hidden" />
+          {/* Twibon Selector yang menindih dari bawah */}
+
+
+          <div className="absolute bottom-0 left-0 right-0 z-10">
+            <TwibonSelector
+              selectedTwibon={selectedTwibonId}
+              onSelectTwibon={setSelectedTwibonId}
+              onSelectActiveTwibon={capturePhoto}
+              switchCamera={switchCamera}
+              isCameraReady={isCameraReady}
+            />
+          </div>
         </div>
 
-        {/* Twibon Selector */}
-        <TwibonSelector
-          selectedTwibon={selectedTwibonId}
-          onSelectTwibon={setSelectedTwibonId}
-          takePicture={capturePhoto}
-        />
 
-        {/* Camera Controls */}
-        <div className="flex items-center justify-center gap-4 mt-6">
-          <Button
-            onClick={switchCamera}
-            variant="secondary"
-            size="lg"
-            className="bg-white/20 text-white border-0 hover:bg-white/30"
-            disabled={!isCameraReady}
-          >
-            <RotateCcw className="w-5 h-5" />
-          </Button>
-          
-          <Button
-            onClick={capturePhoto}
-            disabled={isCapturing || !isCameraReady}
-            size="lg"
-            className="bg-white text-purple-600 hover:bg-white/90 w-16 h-16 rounded-full"
-          >
-            <Camera className="w-6 h-6" />
-          </Button>
-          
-          <div className="w-12 h-12" />
-        </div>
+
       </div>
     </div>
   );
