@@ -9,7 +9,11 @@ interface TwibonSelectorProps {
   takePicture: () => void;
 }
 
-const TwibonSelector = ({ selectedTwibon, onSelectTwibon, takePicture }: TwibonSelectorProps) => {
+const TwibonSelector = ({
+  selectedTwibon,
+  onSelectTwibon,
+  takePicture,
+}: TwibonSelectorProps) => {
   const { twibbons, loading } = useTwibbons();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,65 +39,68 @@ const TwibonSelector = ({ selectedTwibon, onSelectTwibon, takePicture }: TwibonS
     );
   }
 
-  const getSize = (index: number) => {
+  const getScale = (index: number) => {
     const distance = Math.abs(index - selectedIndex);
-    switch (distance) {
-      case 0:
-        return 80;
-      case 1:
-        return 64;
-      case 2:
-        return 52;
-      default:
-        return 44;
-    }
+    const maxScale = 1;
+    const minScale = 0.5;
+    const scale = maxScale - distance * 0.2;
+    return Math.max(scale, minScale);
   };
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-xl py-4 overflow-visible relative">
       <div
         ref={containerRef}
-        className="relative flex overflow-x-auto gap-3 snap-x snap-mandatory scroll-smooth px-4"
+        className="relative flex overflow-x-auto gap-2 snap-x snap-mandatory scroll-smooth px-2"
         style={{ overflowY: 'visible' }}
       >
         {/* Spacer kiri */}
         {selectedIndex === 0 && (
           <>
-            <div className="flex-shrink-0 w-[80px]" />
-            <div className="flex-shrink-0 w-[40px]" />
+            <div className="flex-shrink-0 w-[40%]" />
+            <div className="flex-shrink-0 w-[20%]" />
           </>
         )}
-        {selectedIndex === 1 && <div className="flex-shrink-0 w-[60px]" />}
+        {selectedIndex === 1 && <div className="flex-shrink-0 w-[30%]" />}
 
         {/* Twibon Items */}
         {twibonItems.map((twibon, index) => {
           const isSelected = selectedTwibon === twibon.id;
-          const size = getSize(index);
-          const border = isSelected ? 'border-4 border-purple-500' : 'border border-white/30';
+          const scale = getScale(index);
+          const opacity = isSelected ? 1 : 0.3 + scale * 0.7;
           const zIndex = 10 - Math.abs(index - selectedIndex);
-          const opacity = isSelected ? 1 : 0.4;
+          const border = isSelected ? 'border-4 border-purple-500' : '';
+
+          const handleClick = () => {
+            if (isSelected) {
+              takePicture();
+            } else {
+              onSelectTwibon(twibon.id);
+            }
+          };
 
           return (
             <div
               key={twibon.id ?? 'none'}
-              className="snap-center flex-shrink-0"
+              className="snap-center flex-shrink-0 w-[20%]"
               data-selected={isSelected}
-              style={{ width: size, zIndex }}
+              style={{ zIndex }}
             >
               <div
-                className="relative transition-all duration-300"
-                style={{ width: size, height: size, opacity }}
+                className="w-full aspect-square relative transition-transform duration-300"
+                style={{
+                  transform: `scale(${scale})`,
+                  opacity,
+                }}
               >
                 <Button
-                  onClick={() =>
-                    isSelected ? takePicture() : onSelectTwibon(twibon.id)
-                  }
+                  onClick={handleClick}
                   variant="ghost"
                   size="icon"
                   className={`absolute inset-0 rounded-full w-full h-full bg-white/20 hover:bg-white/30 ${border}`}
                 >
                   {twibon.id === null ? (
-                    <X className="w-5 h-5 text-purple-600" />
+                    <X className="w-6 h-6 text-purple-600" />
                   ) : (
                     <img
                       src={twibon.url}
@@ -110,11 +117,11 @@ const TwibonSelector = ({ selectedTwibon, onSelectTwibon, takePicture }: TwibonS
         {/* Spacer kanan */}
         {selectedIndex === twibonItems.length - 1 && (
           <>
-            <div className="flex-shrink-0 w-[80px]" />
-            <div className="flex-shrink-0 w-[40px]" />
+            <div className="flex-shrink-0 w-[40%]" />
+            <div className="flex-shrink-0 w-[20%]" />
           </>
         )}
-        {selectedIndex === twibonItems.length - 2 && <div className="flex-shrink-0 w-[60px]" />}
+        {selectedIndex === twibonItems.length - 2 && <div className="flex-shrink-0 w-[30%]" />}
       </div>
 
       {/* Selected Name */}
