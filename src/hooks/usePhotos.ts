@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Photo {
@@ -14,13 +13,92 @@ interface Photo {
   } | null;
 }
 
+interface PhotosResponse {
+  data: Photo[];
+  hasMore: boolean;
+}
+
 export const usePhotos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const channelRef = useRef<any>(null);
+  const PAGE_SIZE = 10; // Number of photos to load per page
 
   // Load photos from database
-  const loadPhotos = async () => {
+  const loadPhotos = async (reset = false) => {
+    try {
+      if (reset) {
+        setPage(1);
+        setLoading(true);
+      }
+
+      const { data, error } = await supabase
+        .from('photos')
+        .select(`
+          *,
+          twibbons (
+            id,
+            name,
+            url
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(0, PAGE_SIZE - 1);
+      
+      if (error) throw error;
+      setPhotos(data || []);
+      setHasMore((data?.length || 0) >= PAGE_SIZE);
+    } catch (error) {
+      console.error('Error loading photos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load more photos for infinite scroll
+  const loadMorePhotos = useCallback(async () => {
+    if (loading || loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const from = (nextPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await supabase
+        .from('photos')
+        .select(`
+          *,
+          twibbons (
+            id,
+            name,
+            url
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setPhotos(prev => [...prev, ...data]);
+        setPage(nextPage);
+        setHasMore(data.length >= PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more photos:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, loading, loadingMore, hasMore]);
+
+  // API: Get all photos (for external use)
+  const getAllPhotos = async (): Promise<PhotosResponse> => {
     try {
       const { data, error } = await supabase
         .from('photos')
@@ -35,11 +113,48 @@ export const usePhotos = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setPhotos(data || []);
+      
+      return {
+        data: data || [],
+        hasMore: false
+      };
     } catch (error) {
-      console.error('Error loading photos:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error getting all photos:', error);
+      throw error;
+    }
+  };
+
+  // API: Get photos with pagination (for infinite scroll)
+  const getPaginatedPhotos = async (page: number, pageSize: number = PAGE_SIZE): Promise<PhotosResponse> => {
+    try {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await supabase
+        .from('photos')
+        .select(`
+          *,
+          twibbons (
+            id,
+            name,
+            url
+          )
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      
+      if (error) throw error;
+
+      const totalCount = count || 0;
+      const hasMore = to < totalCount - 1;
+
+      return {
+        data: data || [],
+        hasMore
+      };
+    } catch (error) {
+      console.error('Error getting paginated photos:', error);
+      throw error;
     }
   };
 
@@ -143,7 +258,7 @@ export const usePhotos = () => {
           table: 'photos'
         },
         () => {
-          loadPhotos();
+          loadPhotos(true); // Reset and reload all photos when changes occur
         }
       )
       .subscribe();
@@ -161,9 +276,14 @@ export const usePhotos = () => {
   return {
     photos,
     loading,
+    loadingMore,
+    hasMore,
     savePhoto,
     updatePhotoTwibon,
     deletePhoto,
-    loadPhotos
+    loadPhotos,
+    loadMorePhotos,
+    getAllPhotos,
+    getPaginatedPhotos
   };
 };

@@ -249,14 +249,14 @@ const Index = () => {
 
           <div className="flex items-center justify-between px-4 py-4">
             {/* Flip Button (Left) */}
-            <Link to="/gallery">
+            <a href="/gallery">
               <Button
                 variant="secondary"
                 className="bg-white/20 text-white border-0 hover:bg-white/30 rounded-full w-8 h-8 p-0 flex items-center justify-center"
               >
                 <Images className="w-4 h-4" />
               </Button>
-            </Link>
+            </a>
 
             {/* Center Circle with Camera Icon - Capture Photo Button */}
             <Button
