@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Gallery from "./pages/Gallery";
 import TwibonManager from "./pages/TwibonManager";
 import NotFound from "./pages/NotFound";
+import PublicGallery from "./pages/PublicGallery";
+import Display from "./pages/Display";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +22,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/public-gallery" element={<PublicGallery />} />
           <Route path="/twibbon" element={<TwibonManager />} />
+          <Route path="/display" element={<Display />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

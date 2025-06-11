@@ -5,7 +5,7 @@ import { usePhotos } from '@/hooks/usePhotos';
 import { useTwibbons } from '@/hooks/useTwibbons';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, Images, Camera } from 'lucide-react';
+import { RefreshCcw, Images} from 'lucide-react';
 
 const Index = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);

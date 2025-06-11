@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const Gallery = () => {
+const PublicGallery = () => {
   const {
     photos,
     loading,
@@ -318,14 +318,14 @@ const Gallery = () => {
                       </SheetContent>
                     </Sheet> */}
 
-                      <Button
+                      {/* <Button
                         onClick={() => handleDeleteClick(photo)}
                         size="sm"
                         variant="destructive"
                         className="bg-red-500/80 text-white border-0 hover:bg-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                   <div className="p-3">
@@ -364,4 +364,4 @@ const Gallery = () => {
   );
 };
 
-export default Gallery;
+export default PublicGallery;
