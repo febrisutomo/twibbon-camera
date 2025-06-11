@@ -240,6 +240,7 @@ export const usePhotos = () => {
 
   useEffect(() => {
     loadPhotos();
+    getAllPhotos();
 
     // Clean up any existing channel
     if (channelRef.current) {
@@ -258,7 +259,8 @@ export const usePhotos = () => {
           table: 'photos'
         },
         () => {
-          loadPhotos(true); // Reset and reload all photos when changes occur
+          loadPhotos(true);
+          getAllPhotos();
         }
       )
       .subscribe();

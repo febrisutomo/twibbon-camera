@@ -5,7 +5,7 @@ import { usePhotos } from '@/hooks/usePhotos';
 import { useTwibbons } from '@/hooks/useTwibbons';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, Images} from 'lucide-react';
+import { RefreshCcw, Images } from 'lucide-react';
 
 const Index = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -132,34 +132,27 @@ const Index = () => {
 
     // Draw twibon overlay if selected (never flip the twibon)
     if (selectedTwibon) {
-      const twibonImg = new Image();
-      twibonImg.crossOrigin = 'anonymous';
-      twibonImg.onload = () => {
-        ctx.drawImage(twibonImg, 0, 0, canvas.width, canvas.height);
 
-        // Convert to blob and save
-        canvas.toBlob(async (blob) => {
-          if (blob) {
-            try {
-              await savePhoto(blob, selectedTwibonId || undefined);
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          try {
+            await savePhoto(blob, selectedTwibonId || undefined);
 
-              toast({
-                title: "Photo Captured!",
-                description: "Your photo has been saved.",
-              });
-            } catch (error) {
-              toast({
-                title: "Error",
-                description: "Failed to save photo. Please try again.",
-                variant: "destructive",
-              });
-            }
-
-            setTimeout(() => setIsCapturing(false), 200);
+            toast({
+              title: "Photo Captured!",
+              description: "Your photo has been saved.",
+            });
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to save photo. Please try again.",
+              variant: "destructive",
+            });
           }
-        }, 'image/jpeg', 0.9);
-      };
-      twibonImg.src = selectedTwibon.url;
+
+          setTimeout(() => setIsCapturing(false), 200);
+        }
+      }, 'image/jpeg', 0.9);
     } else {
       // No twibon, just save the photo
       canvas.toBlob(async (blob) => {
