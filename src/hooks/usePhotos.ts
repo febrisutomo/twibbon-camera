@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Photo {
   id: number;
@@ -20,6 +20,7 @@ interface PhotosResponse {
 
 export const usePhotos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [allPhotos, setAllPhotos] = useState<Photo[][]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -36,23 +37,25 @@ export const usePhotos = () => {
       }
 
       const { data, error } = await supabase
-        .from('photos')
-        .select(`
+        .from("photos")
+        .select(
+          `
           *,
           twibbons (
             id,
             name,
             url
           )
-        `)
-        .order('created_at', { ascending: false })
+        `
+        )
+        .order("created_at", { ascending: false })
         .range(0, PAGE_SIZE - 1);
-      
+
       if (error) throw error;
       setPhotos(data || []);
       setHasMore((data?.length || 0) >= PAGE_SIZE);
     } catch (error) {
-      console.error('Error loading photos:', error);
+      console.error("Error loading photos:", error);
     } finally {
       setLoading(false);
     }
@@ -69,92 +72,63 @@ export const usePhotos = () => {
       const to = from + PAGE_SIZE - 1;
 
       const { data, error } = await supabase
-        .from('photos')
-        .select(`
+        .from("photos")
+        .select(
+          `
           *,
           twibbons (
             id,
             name,
             url
           )
-        `)
-        .order('created_at', { ascending: false })
+        `
+        )
+        .order("created_at", { ascending: false })
         .range(from, to);
-      
+
       if (error) throw error;
 
       if (data && data.length > 0) {
-        setPhotos(prev => [...prev, ...data]);
+        setPhotos((prev) => [...prev, ...data]);
         setPage(nextPage);
         setHasMore(data.length >= PAGE_SIZE);
       } else {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error loading more photos:', error);
+      console.error("Error loading more photos:", error);
     } finally {
       setLoadingMore(false);
     }
   }, [page, loading, loadingMore, hasMore]);
 
-  // API: Get all photos (for external use)
-  const getAllPhotos = async (): Promise<PhotosResponse> => {
+  const loadAllPhotos = async (reset = false) => {
     try {
+      if (reset) {
+        setPage(1);
+        setLoading(true);
+      }
+
       const { data, error } = await supabase
-        .from('photos')
-        .select(`
+        .from("photos")
+        .select(
+          `
           *,
           twibbons (
             id,
             name,
             url
           )
-        `)
-        .order('created_at', { ascending: false });
-      
+        `
+        )
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
-      
-      return {
-        data: data || [],
-        hasMore: false
-      };
+      setAllPhotos(data || []);
     } catch (error) {
-      console.error('Error getting all photos:', error);
-      throw error;
-    }
-  };
-
-  // API: Get photos with pagination (for infinite scroll)
-  const getPaginatedPhotos = async (page: number, pageSize: number = PAGE_SIZE): Promise<PhotosResponse> => {
-    try {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data, error, count } = await supabase
-        .from('photos')
-        .select(`
-          *,
-          twibbons (
-            id,
-            name,
-            url
-          )
-        `, { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(from, to);
-      
-      if (error) throw error;
-
-      const totalCount = count || 0;
-      const hasMore = to < totalCount - 1;
-
-      return {
-        data: data || [],
-        hasMore
-      };
-    } catch (error) {
-      console.error('Error getting paginated photos:', error);
-      throw error;
+      console.error("Error loading photos:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,52 +136,57 @@ export const usePhotos = () => {
   const savePhoto = async (blob: Blob, twibonId?: number) => {
     try {
       const fileName = `photo-${Date.now()}.jpg`;
-      
+
       // Upload to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('photos')
+        .from("photos")
         .upload(fileName, blob, {
-          contentType: 'image/jpeg',
-          cacheControl: '3600',
+          contentType: "image/jpeg",
+          cacheControl: "3600",
         });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('photos')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("photos").getPublicUrl(fileName);
 
       // Save to database
       const { data, error } = await supabase
-        .from('photos')
-        .insert([{ 
-          url: publicUrl,
-          twibbon_id: twibonId || null
-        }])
+        .from("photos")
+        .insert([
+          {
+            url: publicUrl,
+            twibbon_id: twibonId || null,
+          },
+        ])
         .select()
         .single();
 
       if (error) throw error;
-      
+
       return data;
     } catch (error) {
-      console.error('Error saving photo:', error);
+      console.error("Error saving photo:", error);
       throw error;
     }
   };
 
   // Update photo's twibon
-  const updatePhotoTwibon = async (photoId: number, twibonId: number | null) => {
+  const updatePhotoTwibon = async (
+    photoId: number,
+    twibonId: number | null
+  ) => {
     try {
       const { error } = await supabase
-        .from('photos')
+        .from("photos")
         .update({ twibbon_id: twibonId })
-        .eq('id', photoId);
+        .eq("id", photoId);
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating photo twibon:', error);
+      console.error("Error updating photo twibon:", error);
       throw error;
     }
   };
@@ -216,31 +195,29 @@ export const usePhotos = () => {
   const deletePhoto = async (photo: Photo) => {
     try {
       // Extract filename from URL
-      const fileName = photo.url.split('/').pop();
-      
+      const fileName = photo.url.split("/").pop();
+
       // Delete from storage
       if (fileName) {
-        await supabase.storage
-          .from('photos')
-          .remove([fileName]);
+        await supabase.storage.from("photos").remove([fileName]);
       }
 
       // Delete from database
       const { error } = await supabase
-        .from('photos')
+        .from("photos")
         .delete()
-        .eq('id', photo.id);
+        .eq("id", photo.id);
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting photo:', error);
+      console.error("Error deleting photo:", error);
       throw error;
     }
   };
 
   useEffect(() => {
     loadPhotos();
-    getAllPhotos();
+    loadAllPhotos();
 
     // Clean up any existing channel
     if (channelRef.current) {
@@ -252,15 +229,15 @@ export const usePhotos = () => {
     const channel = supabase
       .channel(`photos-updates-${Math.random().toString(36).substr(2, 9)}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'photos'
+          event: "*",
+          schema: "public",
+          table: "photos",
         },
         () => {
           loadPhotos(true);
-          getAllPhotos();
+          loadAllPhotos(true);
         }
       )
       .subscribe();
@@ -277,6 +254,7 @@ export const usePhotos = () => {
 
   return {
     photos,
+    allPhotos,
     loading,
     loadingMore,
     hasMore,
@@ -285,7 +263,5 @@ export const usePhotos = () => {
     deletePhoto,
     loadPhotos,
     loadMorePhotos,
-    getAllPhotos,
-    getPaginatedPhotos
   };
 };

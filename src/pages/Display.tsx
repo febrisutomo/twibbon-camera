@@ -4,7 +4,7 @@ import { usePhotos } from '@/hooks/usePhotos';
 
 const Display = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const { getAllPhotos, photos } = usePhotos();
+    const { allPhotos: photos } = usePhotos();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [columnCount, setColumnCount] = useState(6); // Default column count
