@@ -262,6 +262,7 @@ export const usePhotos = () => {
     updatePhotoTwibon,
     deletePhoto,
     loadPhotos,
+    loadAllPhotos,
     loadMorePhotos,
   };
 };
