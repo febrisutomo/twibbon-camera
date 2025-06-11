@@ -189,7 +189,7 @@ const Gallery = () => {
                       <Download className="w-4 h-4" />
                     </Button>
                     
-                    <Sheet>
+                    {/* <Sheet>
                       <SheetTrigger asChild>
                         <Button
                           onClick={() => setEditingPhoto(photo)}
@@ -210,7 +210,6 @@ const Gallery = () => {
                         
                         <div className="mt-6 space-y-4">
                           <div className="grid grid-cols-2 gap-2">
-                            {/* None option with X icon */}
                             <Button
                               onClick={() => handleUpdateTwibon(photo.id, null)}
                               variant={photo.twibbon_id === null ? "default" : "outline"}
@@ -222,7 +221,6 @@ const Gallery = () => {
                               <span className="text-xs">None</span>
                             </Button>
                             
-                            {/* Twibon options */}
                             {twibbons.map((twibon) => (
                               <Button
                                 key={twibon.id}
@@ -241,7 +239,7 @@ const Gallery = () => {
                           </div>
                         </div>
                       </SheetContent>
-                    </Sheet>
+                    </Sheet> */}
                     
                     <Button
                       onClick={() => handleDeletePhoto(photo)}
@@ -258,11 +256,11 @@ const Gallery = () => {
                     <p className="text-white/80 text-sm">
                       {formatDate(photo.created_at)}
                     </p>
-                    {photo.twibbons && photo.twibbon_id && (
+                    {/* {photo.twibbons && photo.twibbon_id && (
                       <span className="text-xs bg-white/20 text-white px-2 py-1 rounded">
                         {photo.twibbons.name}
                       </span>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>

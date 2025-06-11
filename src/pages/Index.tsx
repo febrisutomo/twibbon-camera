@@ -1,10 +1,11 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import TwibonSelector from '@/components/TwibonSelector';
-import CameraPreview from '@/components/CameraPreview';
 import { useToast } from '@/hooks/use-toast';
 import { usePhotos } from '@/hooks/usePhotos';
 import { useTwibbons } from '@/hooks/useTwibbons';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { RefreshCcw, Images, Camera } from 'lucide-react';
 
 const Index = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -18,7 +19,14 @@ const Index = () => {
   const { savePhoto } = usePhotos();
   const { twibbons } = useTwibbons();
 
+  useEffect(() => {
+    if (twibbons.length > 0) {
+      setSelectedTwibonId(twibbons[0].id);
+    }
+  }, [twibbons]);
+
   const selectedTwibon = twibbons.find(t => t.id === selectedTwibonId);
+
 
   const startCamera = useCallback(async () => {
     try {
@@ -184,39 +192,94 @@ const Index = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
-      <div className="container h-full mx-auto px-4 py-4 max-w-sm">
+      <div className="relative container h-full px-4 py-4">
 
-        <div className="relative h-full">
-          {/* Camera Preview */}
-          <div className="relative">
-            <CameraPreview
-              videoRef={videoRef}
-              selectedTwibonId={selectedTwibonId}
-              selectedTwibonUrl={selectedTwibon?.url || ''}
-              isCapturing={isCapturing}
-              isCameraReady={isCameraReady}
-              facingMode={facingMode}
-            />
-            <canvas ref={canvasRef} className="hidden" />
-          </div>
+        {/* Camera Preview */}
+        <div
+          className={`relative mx-auto max-h-full bg-black rounded-xl overflow-hidden shadow-2xl transition-transform duration-200 aspect-[9/16] ${isCapturing ? 'scale-95' : 'scale-100'
+            }`}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className={`w-full h-full object-cover transition-opacity duration-300 ${isCameraReady ? 'opacity-100' : 'opacity-0'
+              } ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+          />
 
-          {/* Twibon Selector yang menindih dari bawah */}
-          <div className="absolute bottom-0 left-0 right-0 z-10">
-            <TwibonSelector
-              selectedTwibon={selectedTwibonId}
-              onSelectTwibon={setSelectedTwibonId}
-              onSelectActiveTwibon={capturePhoto}
-              switchCamera={switchCamera}
-              isCameraReady={isCameraReady}
-            />
-          </div>
+          {/* Loading indicator */}
+          {!isCameraReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <div className="text-white text-lg">Loading camera...</div>
+            </div>
+          )}
+
+          {/* Twibon Overlay - never flip the twibon */}
+          {selectedTwibonId && selectedTwibon?.url && isCameraReady && (
+            <div className="absolute inset-0 pointer-events-none">
+              <img
+                src={selectedTwibon?.url}
+                alt="Twibon frame"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Capture Flash Effect */}
+          {isCapturing && (
+            <div className="absolute inset-0 bg-white animate-pulse opacity-50" />
+          )}
+
+          {/* Camera Guidelines */}
+          {isCameraReady && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-32 h-32 border-2 border-white/30 rounded-full" />
+              </div>
+            </div>
+          )}
         </div>
 
+        <canvas ref={canvasRef} className="hidden" />
+
+        {/* Twibon Selector yang menindih dari bawah */}
+        <div className="absolute bottom-0 left-0 right-0 z-10">
 
 
+          <div className="flex items-center justify-between px-4 py-4">
+            {/* Flip Button (Left) */}
+            <Link to="/gallery">
+              <Button
+                variant="secondary"
+                className="bg-white/20 text-white border-0 hover:bg-white/30 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+              >
+                <Images className="w-4 h-4" />
+              </Button>
+            </Link>
+
+            {/* Center Circle with Camera Icon - Capture Photo Button */}
+            <Button
+              onClick={capturePhoto}
+              variant="secondary"
+              className="bg-white rounded-full w-16 h-16 p-0 shadow-lg"
+            />
+
+            {/* Camera Switch Button (Right) */}
+            <Button
+              onClick={switchCamera}
+              variant="secondary"
+              className="bg-white/20 text-white border-0 hover:bg-white/30 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+              disabled={!isCameraReady}
+            >
+              <RefreshCcw className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Index;
+

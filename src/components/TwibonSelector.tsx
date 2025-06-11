@@ -54,7 +54,7 @@ const TwibonSelector = ({
 
   if (loading) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl py-4">
+      <div className="py-4">
         <div className="text-white/60 text-center">Loading frames...</div>
       </div>
     );
