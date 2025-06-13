@@ -123,7 +123,7 @@ const Display = () => {
 
             <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-10">
                 <img
-                    src="/public/logo-r17group-text-white.png" // change to your actual logo path
+                    src="/logo-r17group-text-white.png" // change to your actual logo path
                     alt="Overlay Logo"
                     className="w-40 md:w-64 lg:w-72"
                 />
