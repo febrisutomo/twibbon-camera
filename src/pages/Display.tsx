@@ -4,9 +4,7 @@ import { usePhotos } from '@/hooks/usePhotos';
 
 const Display = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const { allPhotos: photos } = usePhotos();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { allPhotos: photos, loading } = usePhotos();
     const [columnCount, setColumnCount] = useState(6); // Default column count
 
 
@@ -61,13 +59,6 @@ const Display = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-900 flex justify-center items-center">
-                <div className="text-red-500 text-lg">{error}</div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-gray-900 overflow-hidden">
@@ -79,7 +70,7 @@ const Display = () => {
                     <div
                         key={index}
                         className={`flex-1 flex flex-col gap-2 sm:gap-3 md:gap-4 lg:gap-5 ${index % 2 === 1 ? 'animate-[scroll-vertical-reverse_40s_linear_infinite]' :
-                                'animate-[scroll-vertical_40s_linear_infinite]'
+                            'animate-[scroll-vertical_40s_linear_infinite]'
                             }`}
                     >
                         {columnPhotos.map((photo) => (
@@ -124,6 +115,18 @@ const Display = () => {
                         ))}
                     </div>
                 ))}
+            </div>
+
+            {/* add overlay dark */}
+            <div className="absolute inset-0 bg-black opacity-30"></div>
+
+
+            <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-10">
+                <img
+                    src="/public/logo-r17group-text-white.png" // change to your actual logo path
+                    alt="Overlay Logo"
+                    className="w-40 md:w-64 lg:w-72"
+                />
             </div>
 
             {/* Add custom animation to Tailwind config */}
