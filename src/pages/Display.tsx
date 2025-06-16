@@ -40,7 +40,7 @@ const Display = () => {
         // Calculate animation duration based on number of items
         columns.forEach(col => {
             const itemCount = col.children.length;
-            const durationPerItem = 3; // seconds per item (adjust as needed)
+            const durationPerItem = 2; // seconds per item (adjust as needed)
             const totalDuration = itemCount * durationPerItem;
             col.style.animationDuration = `${totalDuration}s`;
         });
@@ -121,12 +121,14 @@ const Display = () => {
             <div className="absolute inset-0 bg-black opacity-30"></div>
 
 
-            <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-10">
-                <img
-                    src="/logo-r17group-text-white.png" // change to your actual logo path
-                    alt="Overlay Logo"
-                    className="w-40 md:w-64 lg:w-72"
-                />
+            <div className="pointer-events-none fixed top-0 left-1/2 transform -translate-x-1/2 z-10 flex items-center justify-center">
+                <div className="rounded-br-[40px] rounded-bl-[40px] bg-black p-2">
+                    <img
+                        src="/logo-r17group-text-white.png" // change to your actual logo path
+                        alt="Overlay Logo"
+                        className="w-[240px] md:w-[296px] lg:w-[480px]"
+                    />
+                </div>
             </div>
 
             {/* Add custom animation to Tailwind config */}
