@@ -93,26 +93,7 @@ const Display = () => {
                                 )}
                             </div>
                         ))}
-                        {/* Duplicate items for seamless looping */}
-                        {columnPhotos.map((photo) => (
-                            <div key={`duplicate-${photo.id}`} className="aspect-[9/16] w-full rounded-lg sm:rounded-xl overflow-hidden shrink-0 bg-gray-800 relative group">
-                                <img
-                                    src={photo.url}
-                                    alt={`Photo ${photo.id}`}
-                                    className="w-full h-full object-cover rounded-lg sm:rounded-xl"
-                                    loading="lazy"
-                                />
-                                {photo.twibbons && photo.twibbon_id && (
-                                    <div className="absolute inset-0">
-                                        <img
-                                            src={photo.twibbons.url}
-                                            alt={photo.twibbons.name}
-                                            className="w-full h-full object-cover rounded-lg sm:rounded-xl"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                       
                     </div>
                 ))}
             </div>
@@ -122,11 +103,11 @@ const Display = () => {
 
 
             <div className="pointer-events-none fixed top-0 left-1/2 transform -translate-x-1/2 z-10 flex items-center justify-center">
-                <div className="rounded-br-[40px] rounded-bl-[40px] bg-black p-2">
+                <div className="rounded-br-[40px] rounded-bl-[40px] bg-black p-2 lg:p-4">
                     <img
                         src="/logo-r17group-text-white.png" // change to your actual logo path
                         alt="Overlay Logo"
-                        className="w-[240px] md:w-[296px] lg:w-[480px]"
+                        className="w-[240px] md:w-[296px] lg:w-[360px]"
                     />
                 </div>
             </div>

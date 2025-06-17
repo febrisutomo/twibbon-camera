@@ -20,11 +20,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Display />} />
           <Route path="/camera" element={<Index />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/public-gallery" element={<PublicGallery />} />
           <Route path="/twibbon" element={<TwibonManager />} />
-          <Route path="/" element={<Display />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
