@@ -23,7 +23,7 @@ const App = () => (
           <Route path="/" element={<Display />} />
           <Route path="/camera" element={<Index />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/public-gallery" element={<PublicGallery />} />
+          <Route path="/download" element={<PublicGallery />} />
           <Route path="/twibbon" element={<TwibonManager />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -167,7 +167,7 @@ const PublicGallery = () => {
   };
 
   const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString('id-ID');
   };
 
   if (loading && photos.length === 0) {
@@ -237,7 +237,7 @@ const PublicGallery = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {photos.map((photo) => (
                 <div key={photo.id} className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden">
-                  <div className="relative group">
+                  <div className="relative">
                     <AspectRatio ratio={9 / 16}>
                       <div className="relative w-full h-full">
                         <img
@@ -256,7 +256,12 @@ const PublicGallery = () => {
                         )}
                       </div>
                     </AspectRatio>
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-white/80 text-sm">
+                        {formatDate(photo.created_at)}
+                      </p>
                       <Button
                         onClick={() => downloadPhoto(photo)}
                         size="sm"
@@ -265,74 +270,6 @@ const PublicGallery = () => {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-
-                      {/* <Sheet>
-                      <SheetTrigger asChild>
-                        <Button
-                          onClick={() => setEditingPhoto(photo)}
-                          size="sm"
-                          variant="secondary"
-                          className="bg-blue-500/80 text-white border-0 hover:bg-blue-500"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent>
-                        <SheetHeader>
-                          <SheetTitle>Select Twibon</SheetTitle>
-                          <SheetDescription>
-                            Choose a twibon for this photo.
-                          </SheetDescription>
-                        </SheetHeader>
-                        
-                        <div className="mt-6 space-y-4">
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              onClick={() => handleUpdateTwibon(photo.id, null)}
-                              variant={photo.twibbon_id === null ? "default" : "outline"}
-                              className="h-auto p-4 flex flex-col gap-2"
-                            >
-                              <div className="w-12 h-20 aspect-[9/16] flex items-center justify-center border rounded">
-                                <X className="w-6 h-6" />
-                              </div>
-                              <span className="text-xs">None</span>
-                            </Button>
-                            
-                            {twibbons.map((twibon) => (
-                              <Button
-                                key={twibon.id}
-                                onClick={() => handleUpdateTwibon(photo.id, twibon.id)}
-                                variant={photo.twibbon_id === twibon.id ? "default" : "outline"}
-                                className="h-auto p-4 flex flex-col gap-2"
-                              >
-                                <img
-                                  src={twibon.url}
-                                  alt={twibon.name}
-                                  className="w-12 h-20 aspect-[9/16] object-cover rounded"
-                                />
-                                <span className="text-xs">{twibon.name}</span>
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </SheetContent>
-                    </Sheet> */}
-
-                      {/* <Button
-                        onClick={() => handleDeleteClick(photo)}
-                        size="sm"
-                        variant="destructive"
-                        className="bg-red-500/80 text-white border-0 hover:bg-red-500"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button> */}
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-white/80 text-sm">
-                        {formatDate(photo.created_at)}
-                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePhotos } from '@/hooks/usePhotos';
 
-
 const Display = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const { allPhotos: photos, loading } = usePhotos();
     const [columnCount, setColumnCount] = useState(6); // Default column count
-
 
     // Handle responsive column count
     useEffect(() => {
@@ -30,7 +28,6 @@ const Display = () => {
         return () => window.removeEventListener('resize', updateColumnCount);
     }, []);
 
-
     // Setup animations after photos load
     useEffect(() => {
         if (!containerRef.current || loading) return;
@@ -43,6 +40,11 @@ const Display = () => {
             const durationPerItem = 2; // seconds per item (adjust as needed)
             const totalDuration = itemCount * durationPerItem;
             col.style.animationDuration = `${totalDuration}s`;
+            
+            // Reset animation to create seamless loop
+            col.style.animation = 'none';
+            void col.offsetHeight; // Trigger reflow
+            col.style.animation = '';
         });
     }, [photos, loading, columnCount]);
 
@@ -50,6 +52,9 @@ const Display = () => {
     const columns = Array.from({ length: columnCount }, (_, colIndex) => (
         photos.filter((_, index) => index % columnCount === colIndex)
     ));
+
+    // Duplicate photos in each column to create seamless loop
+    const duplicatedColumns = columns.map(columnPhotos => [...columnPhotos, ...columnPhotos]);
 
     if (loading && photos.length === 0) {
         return (
@@ -59,22 +64,23 @@ const Display = () => {
         );
     }
 
-
     return (
-        <div className="min-h-screen bg-gray-900 overflow-hidden">
+        <div className="min-h-screen bg-gray-900 flex justify-center items-start overflow-hidden">
             <div
                 ref={containerRef}
                 className="w-full h-screen flex gap-2 sm:gap-3 md:gap-4 lg:gap-5 px-2 sm:px-3 md:px-4 lg:px-5 py-10 box-border"
             >
-                {columns.map((columnPhotos, index) => (
+                {duplicatedColumns.map((columnPhotos, index) => (
                     <div
                         key={index}
-                        className={`flex-1 flex flex-col gap-2 sm:gap-3 md:gap-4 lg:gap-5 ${index % 2 === 1 ? 'animate-[scroll-vertical-reverse_40s_linear_infinite]' :
-                            'animate-[scroll-vertical_40s_linear_infinite]'
-                            }`}
+                        className={`flex-1 flex flex-col gap-2 sm:gap-3 md:gap-4 lg:gap-5 ${
+                            index % 2 === 0 
+                                ? 'animate-[scroll-up_40s_linear_infinite]' 
+                                : 'animate-[scroll-down_40s_linear_infinite]'
+                        }`}
                     >
-                        {columnPhotos.map((photo) => (
-                            <div key={photo.id} className="aspect-[9/16] w-full rounded-lg sm:rounded-xl overflow-hidden shrink-0 bg-gray-800 relative group">
+                        {columnPhotos.map((photo, photoIndex) => (
+                            <div key={`${photo.id}-${photoIndex}`} className="aspect-[9/16] w-full rounded-lg sm:rounded-xl overflow-hidden shrink-0 bg-gray-800 relative group">
                                 <img
                                     src={photo.url}
                                     alt={`Photo ${photo.id}`}
@@ -93,7 +99,6 @@ const Display = () => {
                                 )}
                             </div>
                         ))}
-                       
                     </div>
                 ))}
             </div>
@@ -101,40 +106,24 @@ const Display = () => {
             {/* add overlay dark */}
             <div className="absolute inset-0 bg-black opacity-30"></div>
 
-
             <div className="pointer-events-none fixed top-0 left-1/2 transform -translate-x-1/2 z-10 flex items-center justify-center">
                 <div className="rounded-br-[40px] rounded-bl-[40px] bg-black p-2 lg:p-4">
                     <img
-                        src="/logo-r17group-text-white.png" // change to your actual logo path
+                        src="/logo-r17group-text-white.png"
                         alt="Overlay Logo"
                         className="w-[240px] md:w-[296px] lg:w-[360px]"
                     />
                 </div>
             </div>
 
-            {/* Add custom animation to Tailwind config */}
-            <style jsx global>{`
-        @keyframes scroll-vertical {
-          0% {
-            transform: translateY(0);
-          }
-          100% {
-            transform: translateY(-50%);
-          }
-        }
-        @keyframes scroll-vertical-reverse {
-          0% {
-            transform: translateY(-50%);
-          }
-          100% {
-            transform: translateY(0);
-          }
-        }
-        body {
-          overflow: hidden;
-          touch-action: none;
-        }
-      `}</style>
+            {/* add qr code on bottom right */}
+            <div className="fixed bottom-4 right-4 z-10 p-2 bg-white">
+                <img
+                    src="/qr-download.png"
+                    alt="QR Code"
+                    className="w-16 h-16"
+                />
+            </div>
         </div>
     );
 };
