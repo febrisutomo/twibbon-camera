@@ -128,7 +128,9 @@ const Display = () => {
             {/* <div className="absolute inset-0 bg-black opacity-30"></div> */}
 
             <div className="pointer-events-none fixed top-0 left-1/2 transform -translate-x-1/2 z-10 flex items-center justify-center">
-                <div className="rounded-br-[40px] rounded-bl-[40px] bg-gray-900 p-2 lg:p-4">
+                <div
+                    className="rounded-br-[24px] rounded-bl-[24px] md:rounded-br-[32px] md:rounded-bl-[32px] lg:rounded-br-[42px] lg:rounded-bl-[42px] bg-gray-900 p-2 lg:p-4"
+                >
                     <img
                         src="/logo-r17group-text-white.png"
                         alt="Overlay Logo"
