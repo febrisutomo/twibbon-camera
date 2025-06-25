@@ -167,7 +167,7 @@ const Gallery = () => {
   };
 
   const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString('id-ID');
   };
 
   if (loading && photos.length === 0) {
