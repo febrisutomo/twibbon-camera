@@ -80,14 +80,14 @@ const Display = () => {
 
     if (loading && photos.length === 0) {
         return (
-            <div className="min-h-screen bg-gray-900 flex justify-center items-center">
+            <div className="min-h-screen bg-black flex justify-center items-center">
                 <div className="text-white text-lg">Loading photos...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 flex justify-center items-start overflow-hidden relative">
+        <div className="min-h-screen bg-black flex justify-center items-start overflow-hidden relative">
             {/* Columns container */}
             <div ref={containerRef} className="w-full h-screen flex gap-3 md:gap-4 lg:gap-5 px-3 md:px-4 lg:px-5 box-border">
                 {columns.map((columnPhotos, index) => (
@@ -129,7 +129,7 @@ const Display = () => {
 
             <div className="pointer-events-none fixed top-0 left-1/2 transform -translate-x-1/2 z-10 flex items-center justify-center">
                 <div
-                    className="rounded-br-[24px] rounded-bl-[24px] md:rounded-br-[32px] md:rounded-bl-[32px] lg:rounded-br-[42px] lg:rounded-bl-[42px] bg-gray-900 p-2 lg:p-4"
+                    className="rounded-br-[24px] rounded-bl-[24px] md:rounded-br-[32px] md:rounded-bl-[32px] lg:rounded-br-[42px] lg:rounded-bl-[42px] bg-black p-2 lg:p-4"
                 >
                     <img
                         src="/logo-r17group-text-white.png"
