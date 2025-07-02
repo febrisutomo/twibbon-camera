@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Download, Trash2, X, Edit } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, X, Edit, DownloadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,7 @@ const Gallery = () => {
   const [editingPhoto, setEditingPhoto] = useState<any>(null);
   const [photoToDelete, setPhotoToDelete] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -121,6 +122,118 @@ const Gallery = () => {
         description: "Photo has been saved to your device.",
       });
     }
+  };
+
+  const downloadAllPhotos = async () => {
+    if (photos.length === 0) return;
+    
+    setIsDownloadingAll(true);
+    toast({
+      title: "Preparing Downloads",
+      description: "Your photos are being prepared for download. This may take a moment.",
+    });
+
+    try {
+      // Dynamically import JSZip
+      const JSZip = await import('jszip');
+      const zip = new JSZip.default();
+      const folder = zip.folder("twibbon_photos");
+
+      // Process each photo sequentially to avoid browser limitations
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        const fileName = `twibbon-photo-${photo.id}.jpg`;
+        
+        // Fetch the photo (with twibon if applicable)
+        const blob = await fetchPhotoBlob(photo);
+        
+        if (blob) {
+          folder?.file(fileName, blob);
+        }
+
+        // Update progress every 5 photos
+        if (i % 5 === 0 || i === photos.length - 1) {
+          toast({
+            title: "Downloading...",
+            description: `Processed ${i + 1} of ${photos.length} photos.`,
+          });
+        }
+      }
+
+      // Generate the zip file
+      const content = await zip.generateAsync({ type: "blob" });
+      
+      // Download the zip file
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `twibon_photos_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Download Complete!",
+        description: `All ${photos.length} photos have been downloaded as a zip file.`,
+      });
+    } catch (error) {
+      console.error("Error downloading all photos:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download all photos. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
+  const fetchPhotoBlob = async (photo: any): Promise<Blob | null> => {
+    try {
+      if (photo.twibbons) {
+        // Create merged image canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        // Load photo image
+        const photoImg = await loadImage(photo.url);
+        canvas.width = photoImg.width;
+        canvas.height = photoImg.height;
+        ctx.drawImage(photoImg, 0, 0);
+
+        // Load and draw twibon
+        const twibonImg = await loadImage(photo.twibbons.url);
+        ctx.drawImage(twibonImg, 0, 0, canvas.width, canvas.height);
+
+        // Convert canvas to blob
+        return new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              throw new Error("Canvas to Blob conversion failed");
+            }
+          }, 'image/jpeg', 0.9);
+        });
+      } else {
+        // Download original photo
+        const response = await fetch(photo.url);
+        return await response.blob();
+      }
+    } catch (error) {
+      console.error(`Error processing photo ${photo.id}:`, error);
+      return null;
+    }
+  };
+
+  const loadImage = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
   };
 
   const handleDeleteClick = (photo: any) => {
@@ -212,9 +325,28 @@ const Gallery = () => {
             </Link>
             <h1 className="text-2xl font-bold text-white">Photo Gallery</h1>
           </div>
-          <div className="text-white/80 text-sm">
-            {photos.length} photo{photos.length !== 1 ? 's' : ''}
-            {hasMore && '+'}
+          <div className="flex items-center gap-4">
+            <div className="text-white/80 text-sm">
+              {photos.length} photo{photos.length !== 1 ? 's' : ''}
+              {hasMore && '+'}
+            </div>
+            {photos.length > 0 && (
+              <Button
+                onClick={downloadAllPhotos}
+                disabled={isDownloadingAll}
+                variant="secondary"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isDownloadingAll ? (
+                  "Downloading..."
+                ) : (
+                  <>
+                    <DownloadCloud className="w-4 h-4 mr-2" />
+                    Download All
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
