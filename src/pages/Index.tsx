@@ -184,7 +184,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
+    <div className="h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500">
       <div className="relative container h-full px-4 py-4">
 
         {/* Camera Preview */}
