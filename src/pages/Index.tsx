@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { usePhotos } from '@/hooks/usePhotos';
+import { useSavePhoto } from '@/hooks/useSavePhoto';
 import { useTwibbons } from '@/hooks/useTwibbons';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw, Images } from 'lucide-react';
@@ -14,7 +14,7 @@ const Index = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
-  const { savePhoto } = usePhotos();
+  const { savePhoto } = useSavePhoto();
   const { twibbons } = useTwibbons();
 
   useEffect(() => {

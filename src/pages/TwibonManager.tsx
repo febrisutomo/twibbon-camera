@@ -115,7 +115,7 @@ const TwibonManager = () => {
       .from('twibbons')
       .upload(fileName, file, {
         contentType: 'image/png',
-        cacheControl: '3600',
+        cacheControl: '31536000',
       });
 
     if (error) throw error;
