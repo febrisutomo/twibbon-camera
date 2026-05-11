@@ -8,8 +8,8 @@ import type { Database } from './types';
 // const SUPABASE_URL = "https://iaeayscglinipbffpxov.supabase.co";
 // const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZWF5c2NnbGluaXBiZmZweG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0NTM2OTQsImV4cCI6MjA2NzAyOTY5NH0.nIQzCXNMBSGda_3mxv2HzqbSbVHi9yqn8RtWLFXeyXs";
 
-const SUPABASE_URL =  "https://slxybigzfdgvdtskvdop.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fqJOxIT-Mz7HLT6Hk_byZw_eM6G1waO"
+const SUPABASE_URL =  "https://pdhfgyhrdtkwwbsiwpdt.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_DNsSbB5o0pdvb1G8aqIprw_34QrRErF"
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
