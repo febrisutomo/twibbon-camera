@@ -104,15 +104,6 @@ const Display = () => {
                                                     className="w-full h-full object-cover rounded-lg sm:rounded-xl"
                                                     loading="lazy"
                                                 />
-                                                {photo.twibbons && photo.twibbon_id && (
-                                                    <div className="absolute inset-0">
-                                                        <img
-                                                            src={photo.twibbons.url}
-                                                            alt={photo.twibbons.name}
-                                                            className="w-full h-full object-cover rounded-lg sm:rounded-xl"
-                                                        />
-                                                    </div>
-                                                )}
                                             </div>
                                         </li>
                                     ))}

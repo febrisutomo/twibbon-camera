@@ -1,18 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Download, Trash2, X, Edit, DownloadCloud } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, DownloadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { usePhotos } from '@/hooks/usePhotos';
-import { useTwibbons } from '@/hooks/useTwibbons';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { usePhotos, type Photo } from '@/hooks/usePhotos';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   AlertDialog,
@@ -32,13 +23,10 @@ const Gallery = () => {
     loadingMore,
     hasMore,
     deletePhoto,
-    updatePhotoTwibon,
     loadMorePhotos
   } = usePhotos();
-  const { twibbons } = useTwibbons();
   const { toast } = useToast();
-  const [editingPhoto, setEditingPhoto] = useState<any>(null);
-  const [photoToDelete, setPhotoToDelete] = useState<any>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -68,60 +56,19 @@ const Gallery = () => {
     };
   }, [loading, loadingMore, hasMore, loadMorePhotos]);
 
-  const downloadPhoto = async (photo: any) => {
-    if (photo.twibbons) {
-      // Create merged image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+  const downloadPhoto = (photo: Photo) => {
+    const link = document.createElement('a');
+    link.href = photo.url;
+    link.download = `photo-${photo.id}.jpg`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-      const photoImg = new Image();
-      photoImg.crossOrigin = 'anonymous';
-
-      photoImg.onload = () => {
-        canvas.width = photoImg.width;
-        canvas.height = photoImg.height;
-
-        // Draw photo
-        ctx.drawImage(photoImg, 0, 0);
-
-        // Draw twibon overlay
-        const twibonImg = new Image();
-        twibonImg.crossOrigin = 'anonymous';
-        twibonImg.onload = () => {
-          ctx.drawImage(twibonImg, 0, 0, canvas.width, canvas.height);
-
-          // Download merged image
-          const link = document.createElement('a');
-          link.href = canvas.toDataURL('image/jpeg', 0.9);
-          link.download = `twibon-photo-${photo.id}.jpg`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          toast({
-            title: "Downloaded!",
-            description: "Photo with twibon has been saved to your device.",
-          });
-        };
-        twibonImg.src = photo.twibbons.url;
-      };
-      photoImg.src = photo.url;
-    } else {
-      // Download original photo
-      const link = document.createElement('a');
-      link.href = photo.url;
-      link.download = `photo-${photo.id}.jpg`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "Downloaded!",
-        description: "Photo has been saved to your device.",
-      });
-    }
+    toast({
+      title: "Downloaded!",
+      description: "Photo has been saved to your device.",
+    });
   };
 
   const downloadAllPhotos = async () => {
@@ -187,56 +134,17 @@ const Gallery = () => {
     }
   };
 
-  const fetchPhotoBlob = async (photo: any): Promise<Blob | null> => {
+  const fetchPhotoBlob = async (photo: { id: number; url: string }): Promise<Blob | null> => {
     try {
-      if (photo.twibbons) {
-        // Create merged image canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-
-        // Load photo image
-        const photoImg = await loadImage(photo.url);
-        canvas.width = photoImg.width;
-        canvas.height = photoImg.height;
-        ctx.drawImage(photoImg, 0, 0);
-
-        // Load and draw twibon
-        const twibonImg = await loadImage(photo.twibbons.url);
-        ctx.drawImage(twibonImg, 0, 0, canvas.width, canvas.height);
-
-        // Convert canvas to blob
-        return new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              throw new Error("Canvas to Blob conversion failed");
-            }
-          }, 'image/jpeg', 0.9);
-        });
-      } else {
-        // Download original photo
-        const response = await fetch(photo.url);
-        return await response.blob();
-      }
+      const response = await fetch(photo.url);
+      return await response.blob();
     } catch (error) {
       console.error(`Error processing photo ${photo.id}:`, error);
       return null;
     }
   };
 
-  const loadImage = (url: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = url;
-    });
-  };
-
-  const handleDeleteClick = (photo: any) => {
+  const handleDeleteClick = (photo: Photo) => {
     setPhotoToDelete(photo);
     setIsDeleteDialogOpen(true);
   };
@@ -259,23 +167,6 @@ const Gallery = () => {
     } finally {
       setIsDeleteDialogOpen(false);
       setPhotoToDelete(null);
-    }
-  };
-
-  const handleUpdateTwibon = async (photoId: number, twibonId: number | null) => {
-    try {
-      await updatePhotoTwibon(photoId, twibonId);
-      setEditingPhoto(null);
-      toast({
-        title: "Updated!",
-        description: "Photo twibon has been updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update photo twibon.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -371,22 +262,11 @@ const Gallery = () => {
                 <div key={photo.id} className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden">
                   <div className="relative group">
                     <AspectRatio ratio={9 / 16}>
-                      <div className="relative w-full h-full">
-                        <img
-                          src={photo.url}
-                          alt={`Photo ${photo.id}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {photo.twibbons && photo.twibbon_id && (
-                          <div className="absolute inset-0">
-                            <img
-                              src={photo.twibbons.url}
-                              alt={photo.twibbons.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
+                      <img
+                        src={photo.url}
+                        alt={`Photo ${photo.id}`}
+                        className="w-full h-full object-cover"
+                      />
                     </AspectRatio>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                       <Button
@@ -397,58 +277,6 @@ const Gallery = () => {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button
-                            onClick={() => setEditingPhoto(photo)}
-                            size="sm"
-                            variant="secondary"
-                            className="bg-blue-500/80 text-white border-0 hover:bg-blue-500"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent>
-                          <SheetHeader>
-                            <SheetTitle>Select Twibon</SheetTitle>
-                            <SheetDescription>
-                              Choose a twibon for this photo.
-                            </SheetDescription>
-                          </SheetHeader>
-
-                          <div className="mt-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-2">
-                              <Button
-                                onClick={() => handleUpdateTwibon(photo.id, null)}
-                                variant={photo.twibbon_id === null ? "default" : "outline"}
-                                className="h-auto p-4 flex flex-col gap-2"
-                              >
-                                <div className="w-12 h-20 aspect-[9/16] flex items-center justify-center border rounded">
-                                  <X className="w-6 h-6" />
-                                </div>
-                                <span className="text-xs">None</span>
-                              </Button>
-
-                              {twibbons.map((twibon) => (
-                                <Button
-                                  key={twibon.id}
-                                  onClick={() => handleUpdateTwibon(photo.id, twibon.id)}
-                                  variant={photo.twibbon_id === twibon.id ? "default" : "outline"}
-                                  className="h-auto p-4 flex flex-col gap-2"
-                                >
-                                  <img
-                                    src={twibon.url}
-                                    alt={twibon.name}
-                                    className="w-12 h-20 aspect-[9/16] object-cover rounded"
-                                  />
-                                  <span className="text-xs">{twibon.name}</span>
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-                        </SheetContent>
-                      </Sheet>
 
                       <Button
                         onClick={() => handleDeleteClick(photo)}

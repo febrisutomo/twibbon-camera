@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Photo {
+export interface Photo {
   id: number;
   url: string;
   twibbon_id: number | null;
@@ -13,22 +14,16 @@ interface Photo {
   } | null;
 }
 
-interface PhotosResponse {
-  data: Photo[];
-  hasMore: boolean;
-}
-
 export const usePhotos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [allPhotos, setAllPhotos] = useState<Photo[][]>([]);
+  const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const channelRef = useRef<any>(null);
-  const PAGE_SIZE = 10; // Number of photos to load per page
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const PAGE_SIZE = 10;
 
-  // Load photos from database
   const loadPhotos = async (reset = false) => {
     try {
       if (reset) {
@@ -61,7 +56,6 @@ export const usePhotos = () => {
     }
   };
 
-  // Load more photos for infinite scroll
   const loadMorePhotos = useCallback(async () => {
     if (loading || loadingMore || !hasMore) return;
 
@@ -132,13 +126,11 @@ export const usePhotos = () => {
     }
   };
 
-  // Save photo to storage and database
   const savePhoto = async (blob: Blob, twibonId?: number) => {
     try {
       const fileName = `photo-${Date.now()}.jpg`;
 
-      // Upload to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("photos")
         .upload(fileName, blob, {
           contentType: "image/jpeg",
@@ -147,12 +139,10 @@ export const usePhotos = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const {
         data: { publicUrl },
       } = supabase.storage.from("photos").getPublicUrl(fileName);
 
-      // Save to database
       const { data, error } = await supabase
         .from("photos")
         .insert([
@@ -173,7 +163,6 @@ export const usePhotos = () => {
     }
   };
 
-  // Update photo's twibon
   const updatePhotoTwibon = async (
     photoId: number,
     twibonId: number | null
@@ -191,18 +180,14 @@ export const usePhotos = () => {
     }
   };
 
-  // Delete photo
   const deletePhoto = async (photo: Photo) => {
     try {
-      // Extract filename from URL
       const fileName = photo.url.split("/").pop();
 
-      // Delete from storage
       if (fileName) {
         await supabase.storage.from("photos").remove([fileName]);
       }
 
-      // Delete from database
       const { error } = await supabase
         .from("photos")
         .delete()
@@ -219,15 +204,13 @@ export const usePhotos = () => {
     loadPhotos();
     loadAllPhotos();
 
-    // Clean up any existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Set up real-time subscription with unique channel name
     const channel = supabase
-      .channel(`photos-updates-${Math.random().toString(36).substr(2, 9)}`)
+      .channel(`photos-updates-${Math.random().toString(36).substring(2, 9)}`)
       .on(
         "postgres_changes",
         {

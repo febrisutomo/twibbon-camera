@@ -1,5 +1,5 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ArrowLeft, Plus, Edit, Trash2, Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,20 +34,39 @@ const TwibonManager = () => {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { toast } = useToast();
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  const loadTwibbons = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('twibbons')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTwibbons(data || []);
+    } catch (error) {
+      console.error('Error loading twibbons:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load twibbons.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     loadTwibbons();
 
-    // Clean up any existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Set up real-time subscription with unique channel name
     const channel = supabase
-      .channel(`twibbons-manager-${Math.random().toString(36).substr(2, 9)}`)
+      .channel(`twibbons-manager-${Math.random().toString(36).substring(2, 9)}`)
       .on(
         'postgres_changes',
         {
@@ -55,8 +74,7 @@ const TwibonManager = () => {
           schema: 'public',
           table: 'twibbons'
         },
-        (payload) => {
-          console.log('Twibon change detected:', payload);
+        () => {
           loadTwibbons();
         }
       )
@@ -70,33 +88,11 @@ const TwibonManager = () => {
         channelRef.current = null;
       }
     };
-  }, []);
-
-  const loadTwibbons = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('twibbons')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setTwibbons(data || []);
-    } catch (error) {
-      console.error('Error loading twibbons:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load twibbons.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadTwibbons]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check if file is PNG
       if (!file.type.includes('png')) {
         toast({
           title: "Error",
@@ -105,10 +101,8 @@ const TwibonManager = () => {
         });
         return;
       }
-      
+
       setSelectedFile(file);
-      
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -116,8 +110,8 @@ const TwibonManager = () => {
 
   const uploadTwibonImage = async (file: File) => {
     const fileName = `twibon-${Date.now()}.png`;
-    
-    const { data, error } = await supabase.storage
+
+    const { error } = await supabase.storage
       .from('twibbons')
       .upload(fileName, file, {
         contentType: 'image/png',
@@ -146,19 +140,18 @@ const TwibonManager = () => {
     setUploading(true);
     try {
       const imageUrl = await uploadTwibonImage(selectedFile);
-      
+
       const { error } = await supabase
         .from('twibbons')
         .insert([{ name: newTwibonName, url: imageUrl }]);
 
       if (error) throw error;
 
-      // Reset form and close sheet
       setNewTwibonName('');
       setSelectedFile(null);
       setPreviewUrl(null);
       setIsCreateSheetOpen(false);
-      
+
       toast({
         title: "Success",
         description: "Twibon created successfully!",
@@ -180,11 +173,10 @@ const TwibonManager = () => {
 
     setUploading(true);
     try {
-      let updateData: any = { name: editingTwibon.name };
-      
+      const updateData: { name: string; url?: string } = { name: editingTwibon.name };
+
       if (selectedFile) {
-        const imageUrl = await uploadTwibonImage(selectedFile);
-        updateData.url = imageUrl;
+        updateData.url = await uploadTwibonImage(selectedFile);
       }
 
       const { error } = await supabase
@@ -198,7 +190,7 @@ const TwibonManager = () => {
       setSelectedFile(null);
       setPreviewUrl(null);
       setIsEditSheetOpen(false);
-      
+
       toast({
         title: "Success",
         description: "Twibon updated successfully!",
@@ -224,7 +216,7 @@ const TwibonManager = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast({
         title: "Downloaded!",
         description: "Twibon has been saved to your device.",
@@ -240,15 +232,11 @@ const TwibonManager = () => {
 
   const deleteTwibon = async (twibon: Twibon) => {
     try {
-      // Delete from storage
       const fileName = twibon.url.split('/').pop();
       if (fileName) {
-        await supabase.storage
-          .from('twibbons')
-          .remove([fileName]);
+        await supabase.storage.from('twibbons').remove([fileName]);
       }
 
-      // Delete from database
       const { error } = await supabase
         .from('twibbons')
         .delete()
@@ -285,7 +273,6 @@ const TwibonManager = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500">
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Link to="/">
@@ -295,8 +282,7 @@ const TwibonManager = () => {
             </Link>
             <h1 className="text-2xl font-bold text-white">Manage Twibbons</h1>
           </div>
-          
-          {/* Create New Twibon Sheet */}
+
           <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
             <SheetTrigger asChild>
               <Button className="bg-white text-purple-600 hover:bg-white/90">
@@ -311,7 +297,7 @@ const TwibonManager = () => {
                   Upload a PNG image and give it a name to create a new twibon frame.
                 </SheetDescription>
               </SheetHeader>
-              
+
               <div className="mt-6 space-y-4">
                 <div>
                   <Label htmlFor="create-name">Name</Label>
@@ -322,7 +308,7 @@ const TwibonManager = () => {
                     placeholder="Enter twibon name"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="create-image">Image (PNG only)</Label>
                   <Input
@@ -332,8 +318,7 @@ const TwibonManager = () => {
                     onChange={handleFileSelect}
                   />
                 </div>
-                
-                {/* Preview */}
+
                 {previewUrl && (
                   <div>
                     <Label>Preview</Label>
@@ -348,7 +333,7 @@ const TwibonManager = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="flex gap-2 pt-4">
                   <Button
                     onClick={createTwibon}
@@ -364,7 +349,6 @@ const TwibonManager = () => {
           </Sheet>
         </div>
 
-        {/* Edit Twibon Sheet */}
         <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
           <SheetContent>
             <SheetHeader>
@@ -373,7 +357,7 @@ const TwibonManager = () => {
                 Update the twibon name or replace the image.
               </SheetDescription>
             </SheetHeader>
-            
+
             <div className="mt-6 space-y-4">
               <div>
                 <Label htmlFor="edit-name">Name</Label>
@@ -384,7 +368,7 @@ const TwibonManager = () => {
                   placeholder="Enter twibon name"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="edit-image">Image (PNG only)</Label>
                 <Input
@@ -394,8 +378,7 @@ const TwibonManager = () => {
                   onChange={handleFileSelect}
                 />
               </div>
-              
-              {/* Preview */}
+
               {previewUrl && (
                 <div>
                   <Label>New Preview</Label>
@@ -410,7 +393,7 @@ const TwibonManager = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex gap-2 pt-4">
                 <Button
                   onClick={updateTwibon}
@@ -420,7 +403,7 @@ const TwibonManager = () => {
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? 'Updating...' : 'Update'}
                 </Button>
-                
+
                 <Button
                   onClick={() => {
                     setEditingTwibon(null);
@@ -437,7 +420,6 @@ const TwibonManager = () => {
           </SheetContent>
         </Sheet>
 
-        {/* Twibbons Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
           {twibbons.map((twibon) => (
             <div key={twibon.id} className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden">
